@@ -1,0 +1,7 @@
+*.html
+*.svg
+*.min.js
+*.eslintrc.js
+**/node_modules/**
+**/dist/**
+**/.nyc_output/**
