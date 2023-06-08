@@ -5,7 +5,7 @@
   "main": "./dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node-dev --transpile-only ./src/index.ts --watch ./src",
+    "dev": "npx ts-node-dev -T ./src/index.ts --watch ./src",
     "start": "node ./dist/index.js",
     "build": "npx tsc",
     "build:start": "npx tsc && node ./dist/index.js"
@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "chokidar": "^3.5.3",
+    "dotenv": "^16.1.4",
     "xml2js": "^0.6.0"
   }
 }
