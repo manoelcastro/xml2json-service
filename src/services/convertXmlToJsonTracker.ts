@@ -1,5 +1,6 @@
 import chokidar from 'chokidar'
 import fs from 'fs/promises'
+
 import { xml2json } from '../utils/xml2json'
 import { conciliationQueue } from './addTask'
 
@@ -32,16 +33,12 @@ export const convertXmlToJsonTracker = (
 
       await saveJson(chNFe as string, json)
 
-      await conciliationQueue.add(
-        chNFe as string,
-        { data: json },
-        {
-          removeOnComplete: true,
-          removeOnFail: 5000,
-          attempts: 2,
-          jobId: chNFe,
-        }
-      )
+      await conciliationQueue.add(chNFe as string, json, {
+        removeOnComplete: true,
+        removeOnFail: 5000,
+        attempts: 2,
+        jobId: chNFe,
+      })
     } catch (err) {
       console.log(err)
     }
