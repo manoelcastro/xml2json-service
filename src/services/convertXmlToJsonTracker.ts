@@ -1,6 +1,7 @@
+import AdmZip from 'adm-zip'
 import chokidar from 'chokidar'
 import fs from 'fs/promises'
-
+import { resolve } from 'path'
 import { xml2json } from '../utils/xml2json'
 import { conciliationQueue } from './addTask'
 
@@ -15,30 +16,46 @@ export const convertXmlToJsonTracker = (
   sourceFolder: string,
   destFolder: string
 ): void => {
-  const watcher = chokidar.watch(sourceFolder, {
+  const sourcePath = resolve(__dirname, '..', '..', '..', sourceFolder)
+
+  const watcher = chokidar.watch(sourcePath, {
     persistent: true,
     ignored: /(^|[/\\])\../, // ignore arquivos ocultos
     ignoreInitial: true,
     awaitWriteFinish: true,
   })
 
+  watcher.on('addDir', dir => {
+    watcher.on('add', file => {
+      if (file.endsWith('.zip')) {
+        console.log('dentro do zip', file)
+
+        const zip = new AdmZip(file)
+        zip.extractAllTo(resolve(dir))
+      }
+    })
+  })
+
   watcher.on('add', async path => {
     console.log(`Arquivo adicionado: ${path}`)
 
     try {
-      const xmlDocument = await fs.readFile(path, 'utf-8')
-      const json = await xml2json(xmlDocument)
+      if (path.endsWith('.xml')) {
+        console.log('dentro do xml')
+        const xmlDocument = await fs.readFile(path, 'utf-8')
+        const json = await xml2json(xmlDocument)
 
-      const { chNFe } = json.nfeProc.protNFe.infProt
+        const { chNFe } = json.nfeProc.protNFe.infProt
 
-      await saveJson(chNFe as string, json)
+        await saveJson(chNFe as string, json)
 
-      await conciliationQueue.add(chNFe as string, json, {
-        removeOnComplete: true,
-        removeOnFail: 5000,
-        attempts: 2,
-        jobId: chNFe,
-      })
+        await conciliationQueue.add(chNFe as string, json, {
+          removeOnComplete: true,
+          removeOnFail: 5000,
+          attempts: 2,
+          jobId: chNFe,
+        })
+      }
     } catch (err) {
       console.log(err)
     }
